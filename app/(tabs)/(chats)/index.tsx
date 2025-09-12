@@ -3,8 +3,30 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { io, Socket } from 'socket.io-client';
 
 export default function Chats() {
+  const [userId, setUserId] = useState<any>(null);
+  const [socket, setSocket] = useState<Socket | null>(null);
+  
+  useEffect(() => {
+    const getUser = async () => {
+      const userStr = await AsyncStorage.getItem('user');
+      if (userStr) {
+        setUserId((JSON.parse(userStr))._id);
+      }
+    };
+    getUser();
+
+
+    const newSocket = io(process.env.EXPO_PUBLIC_SOCKET_URL, { auth: { userId } });
+    setSocket(newSocket);
+
+    return () => {
+      newSocket.disconnect();
+    };
+  }, []);
+
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   type Connection = {
@@ -81,7 +103,7 @@ export default function Chats() {
           connections?.map((connection, key) => {
             return (
               <View key={key} style={styles.chatItem} onTouchEnd={() => {
-                router.push({ pathname: '/chat', params: { name: connection.username } });
+                router.push({ pathname: '/chat', params: { id: connection._id, name: connection.username } });
               }}>
                 <Image source={require('../../../assets/images/user_default.jpg')} style={{ width: 50, height: 50, borderRadius: 25, borderWidth: 2, borderColor: '#d9d9d9' }} />
                 <View style={styles.chatItemContent}>

@@ -1,10 +1,83 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import io, { Socket } from "socket.io-client";
+
+export interface chatInterface {
+    sender: string,
+    receiver: string,
+    content: string,
+    isDeleted: boolean
+}
 
 export default function Chat() {
-    const { name } = useLocalSearchParams();
+    const scrollViewRef = useRef<any>(null);
+    const { name, id } = useLocalSearchParams();
+
+    const [userId, setUserId] = useState<any>(null);
+    // const [receiverId, setReceiverId] = useState("");
+    const [message, setMessage] = useState("");
+    const [chats, setChats] = useState<chatInterface[]>([]);
+    const [socket, setSocket] = useState<Socket | null>(null);
+
+    const scrollToBottom = () => {
+        if (scrollViewRef.current) {
+            scrollViewRef.current.scrollToEnd({ animated: true });
+        }
+    }
+
+    useEffect(() => {
+        const getData = async () => {
+            const userStr = await AsyncStorage.getItem('user');
+            if (userStr) {
+                setUserId((JSON.parse(userStr))._id);
+            }
+
+            // fetching chat from database
+            const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/chat/getChat`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ sender: userId, receiver: id })
+            });
+
+            if (response.ok || response.status === 200) {
+                const data = await response.json();
+                setChats(data);
+                scrollToBottom();
+            } else {
+                const errorMessage = await response.json();
+                alert(errorMessage.message);
+            }
+        };
+        getData();
+    }, []);
+
+    useEffect(() => {
+        const newSocket = io(process.env.EXPO_PUBLIC_SOCKET_URL, { auth: { userId } });
+        setSocket(newSocket);
+
+        newSocket.on("private_message", (data) => {
+            setChats((prev) => [...prev, data]);
+            scrollToBottom();
+        });
+
+        return () => {
+            newSocket.disconnect();
+        };
+    }, [userId]);
+
+    const sendMessage = () => {
+        if (message.trim() && socket) {
+            socket.emit("private_message", { receiverId: id, message });
+            setMessage("");
+            scrollToBottom();
+        }
+    };
+
     return (
         <KeyboardAvoidingView
             style={styles.screen}
@@ -33,21 +106,27 @@ export default function Chat() {
                         </Pressable>
                     </View>
                 </View>
-                <ScrollView style={styles.chatContainer}>
+                <ScrollView ref={scrollViewRef} style={styles.chatContainer}>
                     <Text style={{ color: '#888', textAlign: 'center', marginVertical: 10 }}>Today</Text>
-                    <View style={{ alignSelf: 'flex-start', backgroundColor: '#eee', padding: 10, borderRadius: 10, marginVertical: 5, maxWidth: '70%' }}>
-                        <Text>Hello👋! How are you?</Text>
-                    </View>
-                    <View style={{ alignSelf: 'flex-end', backgroundColor: '#256af4ff', padding: 10, borderRadius: 10, marginVertical: 5, maxWidth: '70%' }}>
-                        <Text style={{ color: '#fff' }}>I'm good, thanks! How about you?</Text>
-                    </View>
+                    {chats.map((chat, key) => {
+                        return (
+                            chat.receiver === userId ? <View key={key} style={{ alignSelf: 'flex-start', backgroundColor: '#eee', padding: 10, borderRadius: 10, marginVertical: 5, maxWidth: '70%' }}>
+                                <Text>{chat.content}</Text>
+                            </View> :
+                                <View key={key} style={{ alignSelf: 'flex-end', backgroundColor: '#256af4ff', padding: 10, borderRadius: 10, marginVertical: 5, maxWidth: '70%' }}>
+                                    <Text style={{ color: '#fff' }}>{chat.content}</Text>
+                                </View>
+                        )
+                    })}
                 </ScrollView>
                 <View style={styles.inputContainer}>
                     <TextInput
                         style={styles.input}
                         placeholder="Type your message..."
+                        value={message}
+                        onChangeText={text => setMessage(text)}
                     />
-                    <Pressable style={{ ...styles.optionsButton, backgroundColor: '#fff', padding: 10, borderRadius: 25 }} onPress={() => { alert('Send clicked') }}>
+                    <Pressable style={{ ...styles.optionsButton, backgroundColor: '#fff', padding: 10, borderRadius: 25 }} onPress={sendMessage}>
                         <Ionicons name="send" color="#256af4ff" size={24} />
                     </Pressable>
                 </View>

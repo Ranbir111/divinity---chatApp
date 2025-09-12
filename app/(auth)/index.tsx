@@ -1,25 +1,44 @@
-import { useRouter } from 'expo-router';
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Redirect, useRouter } from 'expo-router';
+import React, { useEffect } from 'react';
+import { StyleSheet } from 'react-native';
+// import { StyleSheet, Text, View } from 'react-native';
 
 export default function Authentication() {
   const router = useRouter();
-  // Redirect to login after 1 second
-  setTimeout(() => {
-    router.replace("/login");
-  }, 1000);
 
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.text1}>Welcome to Divinity</Text>
-      {/* <Text style={styles.text2}>Please login or signup to continue</Text>
-      <View style={{ display: 'flex', flexDirection: "row", gap: 20, marginTop: 20 }}>
-        <Link style={styles.button} href="/login">Login</Link>
-        <Link style={styles.button} href="/signup">signup</Link>
-      </View> */}
-    </View>
-  )
+  useEffect(() => {
+    const checkLoginStatus = async () => {
+      const loggedIn = await AsyncStorage.getItem('loggedIn');
+      if (loggedIn === 'true') {
+        router.replace("/(tabs)/(chats)");
+      } else {
+        router.replace("/login");
+      }
+    };
+    checkLoginStatus();
+  }, [])
+
+
+
+  // // Redirect to signup after 1 second
+  // setTimeout(() => {
+  //   checkLoginStatus();
+  // }, 1000);
+
+
+  // return (
+  //   <View style={styles.container}>
+  //     <Text style={styles.text1}>Welcome to Divinity</Text>
+  //     {/* <Text style={styles.text2}>Please login or signup to continue</Text>
+  //     <View style={{ display: 'flex', flexDirection: "row", gap: 20, marginTop: 20 }}>
+  //       <Link style={styles.button} href="/login">Login</Link>
+  //       <Link style={styles.button} href="/signup">signup</Link>
+  //     </View> */}
+  //   </View>
+  // )
+  return <Redirect href="/(tabs)/(chats)" />;
 }
 
 const styles = StyleSheet.create({

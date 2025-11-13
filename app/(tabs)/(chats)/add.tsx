@@ -1,45 +1,50 @@
+import { UserStoreInterface, useUserStore } from '@/store/userStore';
 import Entypo from '@expo/vector-icons/Entypo';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, ToastAndroid, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function Add() {
     const router = useRouter();
+
+    const { addConnection, user } = useUserStore() as UserStoreInterface;
+
     const [email, setEmail] = useState('');
 
     const handleAdd = async () => {
-        // ToastAndroid.show("Connection added :)", ToastAndroid.SHORT)
-        if (!email) {
-            alert("Please fill the required field!");
-        }
+        
+        await addConnection(user._id, email);
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            alert('Please enter a valid email address!');
-            return;
-        }
+        // if (!email) {
+        //     alert("Please fill the required field!");
+        // }
 
-        const userStr = await AsyncStorage.getItem("user");
-        const senderId = userStr ? JSON.parse(userStr) : null;
+        // const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        // if (!emailRegex.test(email)) {
+        //     alert('Please enter a valid email address!');
+        //     return;
+        // }
 
-        const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/others/addConnection`, {
-            method: 'POST',
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ senderId, email })
-        });
-        const data = await response.json();
+        // const userStr = await AsyncStorage.getItem("user");
+        // const senderId = userStr ? JSON.parse(userStr) : null;
 
-        if (response.ok || response.status === 200) {
-            ToastAndroid.show(data.message, ToastAndroid.SHORT);
-            AsyncStorage.setItem('user', data.user);
-            setEmail("");
-            router.back();
-        } else {
-            alert(`Login failed: ${data.message}`);
-        }
+        // const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/others/addConnection`, {
+        //     method: 'POST',
+        //     headers: {
+        //         "Content-Type": "application/json",
+        //     },
+        //     body: JSON.stringify({ senderId, email })
+        // });
+        // const data = await response.json();
+
+        // if (response.ok || response.status === 200) {
+        //     ToastAndroid.show(data.message, ToastAndroid.SHORT);
+        //     AsyncStorage.setItem('user', data.user);
+        //     setEmail("");
+        //     router.back();
+        // } else {
+        //     alert(`Login failed: ${data.message}`);
+        // }
     }
 
     return (

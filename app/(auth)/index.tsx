@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Redirect, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 // import { StyleSheet, Text, View } from 'react-native';
 
 export default function Authentication() {
@@ -28,17 +28,17 @@ export default function Authentication() {
   // }, 1000);
 
 
-  // return (
-  //   <View style={styles.container}>
-  //     <Text style={styles.text1}>Welcome to Divinity</Text>
-  //     {/* <Text style={styles.text2}>Please login or signup to continue</Text>
-  //     <View style={{ display: 'flex', flexDirection: "row", gap: 20, marginTop: 20 }}>
-  //       <Link style={styles.button} href="/login">Login</Link>
-  //       <Link style={styles.button} href="/signup">signup</Link>
-  //     </View> */}
-  //   </View>
-  // )
-  return <Redirect href="/(tabs)/(chats)" />;
+  return (
+    <View style={styles.container}>
+      <Text style={styles.text1}>Welcome to Divinity</Text>
+      {/* <Text style={styles.text2}>Please login or signup to continue</Text>
+      <View style={{ display: 'flex', flexDirection: "row", gap: 20, marginTop: 20 }}>
+        <Link style={styles.button} href="/login">Login</Link>
+        <Link style={styles.button} href="/signup">signup</Link>
+      </View> */}
+    </View>
+  )
+  // return <Redirect href="/(tabs)/(chats)" />;
 }
 
 const styles = StyleSheet.create({

@@ -1,3 +1,5 @@
+import { AuthStoreInterface, useAuthStore } from '@/store/authStore';
+import { useUserStore } from '@/store/userStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -5,6 +7,9 @@ import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-nativ
 
 export default function Login() {
     const router = useRouter();
+
+    const { login } = useAuthStore() as AuthStoreInterface;
+    const setUser = useUserStore((state: any) => state.setUser);
 
     React.useEffect(() => {
         const checkLoggedIn = async () => {
@@ -20,29 +25,34 @@ export default function Login() {
     const [password, setPassword] = useState('');
 
     const handleLogin = async () => {
-        // Handle login logic here
-        if (!email || !password) {
-            alert('Please fill all the fields!');
-            return;
-        }
-        const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/auth/login`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email, password }),
-        });
-        if (response.ok) {
-            const data = await response.json();
-            alert('Login successful!');
-            AsyncStorage.setItem('loggedIn', 'true');
-            AsyncStorage.setItem('user', JSON.stringify(data.user));
-            // Navigate to home page or dashboard
-            router.replace('/(tabs)/(chats)');
-        } else {
-            const errorData = await response.json();
-            alert(`Login failed: ${errorData.message}`);
-        }
+        const success = await login(email, password, router);
+        // if (success) {
+        //     setUser(success.user);
+        // }
+
+        // // Handle login logic here
+        // if (!email || !password) {
+        //     alert('Please fill all the fields!');
+        //     return;
+        // }
+        // const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/auth/login`, {
+        //     method: 'POST',
+        //     headers: {
+        //         'Content-Type': 'application/json',
+        //     },
+        //     body: JSON.stringify({ email, password }),
+        // });
+        // if (response.ok) {
+        //     const data = await response.json();
+        //     alert('Login successful!');
+        //     AsyncStorage.setItem('loggedIn', 'true');
+        //     AsyncStorage.setItem('user', JSON.stringify(data.user));
+        //     // Navigate to home page or dashboard
+        //     router.replace('/(tabs)/(chats)');
+        // } else {
+        //     const errorData = await response.json();
+        //     alert(`Login failed: ${errorData.message}`);
+        // }
     }
 
     return (
